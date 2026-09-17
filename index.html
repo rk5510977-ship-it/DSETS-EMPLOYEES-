@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSETS Employee Management App</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+body{background:#f3f6fa;color:#222}
+.app{max-width:480px;margin:auto;min-height:100vh;background:#fff}
+.header{background:#0757a0;color:white;padding:18px;text-align:center;font-size:21px;font-weight:bold}
+.login{padding:25px}.login h2{text-align:center;margin:15px 0 25px}
+input,select{width:100%;padding:13px;margin:7px 0 14px;border:1px solid #ccc;border-radius:8px;font-size:15px}
+button{width:100%;padding:13px;border:0;border-radius:8px;background:#0757a0;color:white;font-size:16px;font-weight:bold;margin-top:5px}
+button:active{transform:scale(.98)}
+.demo{background:#eef5ff;padding:12px;margin-top:20px;border-radius:8px;font-size:13px;line-height:1.6}
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:15px}
+.card{background:white;border-radius:12px;padding:18px 10px;text-align:center;box-shadow:0 2px 10px #0001;cursor:pointer}
+.card .icon{font-size:30px;margin-bottom:8px}
+.content{padding:15px}.page-title{font-size:21px;font-weight:bold;margin-bottom:15px}
+.box{background:white;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px #0001}
+.row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #eee}
+.row:last-child{border-bottom:0}.net{font-size:20px;font-weight:bold;color:#087b32}
+.back{background:#555;margin-bottom:15px}.logout{background:#d62828}
+.employee-card{border:1px solid #ddd;border-radius:10px;padding:13px;margin-bottom:10px}
+.employee-card strong{font-size:17px}.salary-form{background:#f6f9fc;padding:15px;border-radius:10px;margin-top:15px}
+.success{background:#dff7e6;color:#176b32;padding:10px;border-radius:8px;margin:10px 0;display:none}
+.slip{border:2px solid #222;padding:18px;background:white}.slip h2{text-align:center;margin-bottom:15px}
+.small{font-size:13px;color:#666}
+@media print{body{background:white}.header,button{display:none}.app{max-width:none}.content{padding:0}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="header">DSETS Employee Management App</div>
+<div id="app"></div>
+</div>
+
+<script>
+let employees=JSON.parse(localStorage.getItem("dsetsEmployees"))||[
+{id:"EMP001",name:"Rahul Kumar",designation:"Developer",basic:20000,allowance:3000,deduction:1000},
+{id:"EMP002",name:"Amit Kumar",designation:"Accountant",basic:25000,allowance:4000,deduction:2000},
+{id:"EMP003",name:"Neha Sharma",designation:"HR Executive",basic:18000,allowance:2500,deduction:500}
+];
+let currentEmployee=null,currentRole=null;
+function saveEmployees(){localStorage.setItem("dsetsEmployees",JSON.stringify(employees))}
+function netSalary(e){return Number(e.basic)+Number(e.allowance)-Number(e.deduction)}
+function money(v){return "₹"+Number(v).toLocaleString("en-IN")}
+
+function loginPage(){
+document.getElementById("app").innerHTML=`
+<div class="login"><h2>Login</h2>
+<select id="role"><option value="employee">Employee Login</option><option value="hr">HR / Admin Login</option></select>
+<input id="loginId" placeholder="Employee ID / HR ID">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<div class="demo"><b>Demo Login</b><br><br>
+HR/Admin:<br>ID: <b>HR</b><br>Password: <b>1234</b><br><br>
+Employee:<br>EMP001 / 1234<br>EMP002 / 1234<br>EMP003 / 1234</div></div>`}
+
+function login(){
+let role=document.getElementById("role").value,id=document.getElementById("loginId").value.trim().toUpperCase(),password=document.getElementById("password").value;
+if(password!=="1234"){alert("Wrong password");return}
+if(role==="hr"){if(id!=="HR"){alert("Invalid HR ID");return}currentRole="hr";hrDashboard()}
+else{let e=employees.find(x=>x.id===id);if(!e){alert("Employee ID not found");return}currentEmployee=e;currentRole="employee";employeeHome()}
+}
+
+function employeeHome(){
+let e=currentEmployee;
+document.getElementById("app").innerHTML=`
+<div class="content"><div class="box"><h2>Hello, ${e.name} 👋</h2><br><b>${e.designation}</b><br><span class="small">${e.id}</span></div>
+<div class="menu">
+<div class="card" onclick="profile()"><div class="icon">👤</div>Profile</div>
+<div class="card" onclick="documents()"><div class="icon">📁</div>Documents</div>
+<div class="card" onclick="attendance()"><div class="icon">📅</div>Attendance</div>
+<div class="card" onclick="leavePage()"><div class="icon">📝</div>Leave</div>
+<div class="card" onclick="salaryPage()"><div class="icon">💰</div>Salary</div>
+<div class="card" onclick="salarySlip()"><div class="icon">🧾</div>Salary Slip</div>
+<div class="card" onclick="notifications()"><div class="icon">🔔</div>Notifications</div>
+</div><button class="logout" onclick="logout()">Logout</button></div>`}
+
+function profile(){let e=currentEmployee;document.getElementById("app").innerHTML=`
+<div class="content"><button class="back" onclick="employeeHome()">← Back</button><h2 class="page-title">My Profile</h2>
+<div class="box"><div class="row"><span>Name</span><b>${e.name}</b></div><div class="row"><span>Employee ID</span><b>${e.id}</b></div><div class="row"><span>Designation</span><b>${e.designation}</b></div></div>
+<button onclick="employeeHome()">Back Home</button></div>`}
+
+function documents(){document.getElementById("app").innerHTML=`
+<div class="content"><button class="back" onclick="employeeHome()">← Back</button><h2 class="page-title">My Documents</h2>
+<div class="box"><h3>Upload Document</h3><input type="file"><button onclick="alert('Document uploaded successfully')">Upload</button></div>
+<div class="box">📄 Aadhaar Card<br><br>Status: Uploaded</div><div class="box">📄 PAN Card<br><br>Status: Uploaded</div>
+<button onclick="employeeHome()">Back Home</button></div>`}
+
+function attendance(){document.getElementById("app").innerHTML=`
+<div class="content"><button class="back" onclick="employeeHome()">← Back</button><h2 class="page-title">Attendance</h2>
+<div class="box"><div class="row"><span>01 Sep 2026</span><b>Present</b></div><div class="row"><span>02 Sep 2026</span><b>Present</b></div><div class="row"><span>03 Sep 2026</span><b>Absent</b></div><div class="row"><span>04 Sep 2026</span><b>Present</b></div></div>
+<button onclick="employeeHome()">Back Home</button></div>`}
+
+function leavePage(){document.getElementById("app").innerHTML=`
+<div class="content"><button class="back" onclick="employeeHome()">← Back</button><h2 class="page-title">Leave Application</h2>
+<div class="box"><label>Leave Type</label><select id="leaveType"><option>Casual Leave</option><option>Sick Leave</option><option>Earned Leave</option></select>
+<label>From Date</label><input type="date" id="fromDate"><label>To Date</label><input type="date" id="toDate"><label>Reason</label><input id="reason" placeholder="Enter reason">
+<button onclick="submitLeave()">Submit Leave</button></div><button onclick="employeeHome()">Back Home</button></div>`}
+function submitLeave(){alert("Leave application submitted successfully")}
+
+function salaryPage(){let e=currentEmployee;document.getElementById("app").innerHTML=`
+<div class="content"><button class="back" onclick="employeeHome()">← Back</button><h2 class="page-title">My Salary</h2>
+<div class="box"><div class="row"><span>Employee</span><b>${e.name}</b></div><div class="row"><span>Basic Salary</span><b>${money(e.basic)}</b></div><div class="row"><span>Allowances</span><b>${money(e.allowance)}</b></div><div class="row"><span>Deductions</span><b>${money(e.deduction)}</b></div><div class="row"><span>Net Salary</span><b class="net">${money(netSalary(e))}</b></div></div>
+<p class="small">Salary is decided and managed by HR/Admin. Employee cannot edit salary.</p>
+<button onclick="salarySlip()">View Salary Slip</button><button onclick="employeeHome()">Back Home</button></div>`}
+
+function salarySlip(){let e=currentEmployee;document.getElementById("app").innerHTML=`
+<div class="content"><button class="back" onclick="employeeHome()">← Back</button><div class="slip"><h2>DSETS</h2><p style="text-align:center">Employee Salary Slip</p><br>
+<div class="row"><span>Employee Name</span><b>${e.name}</b></div><div class="row"><span>Employee ID</span><b>${e.id}</b></div><div class="row"><span>Designation</span><b>${e.designation}</b></div><br>
+<div class="row"><span>Basic Salary</span><b>${money(e.basic)}</b></div><div class="row"><span>Allowances</span><b>${money(e.allowance)}</b></div><div class="row"><span>Deductions</span><b>${money(e.deduction)}</b></div><div class="row"><span>Net Salary</span><b>${money(netSalary(e))}</b></div><br>
+<p class="small">This salary slip is generated from DSETS Employee Management System.</p></div><br>
+<button onclick="window.print()">🖨️ Print / Save Salary Slip</button></div>`}
+
+function notifications(){document.getElementById("app").innerHTML=`
+<div class="content"><button class="back" onclick="employeeHome()">← Back</button><h2 class="page-title">Notifications</h2>
+<div class="box">🔔 Salary slip for this month is available.</div><div class="box">🔔 Attendance has been updated.</div><div class="box">🔔 Please upload pending documents.</div>
+<button onclick="employeeHome()">Back Home</button></div>`}
+
+function hrDashboard(){document.getElementById("app").innerHTML=`
+<div class="content"><div class="box"><h2>HR / Admin Dashboard 👨‍💼</h2><br><p>Manage employee salary and employee records.</p></div>
+<div class="menu"><div class="card" onclick="manageSalary()"><div class="icon">💰</div>Manage Salary</div><div class="card" onclick="employeeList()"><div class="icon">👥</div>Employees</div></div>
+<button class="logout" onclick="logout()">Logout</button></div>`}
+
+function employeeList(){document.getElementById("app").innerHTML=`
+<div class="content"><button class="back" onclick="hrDashboard()">← HR Dashboard</button><h2 class="page-title">Employees</h2><div id="employeeList"></div></div>`;
+let html="";employees.forEach(e=>{html+=`<div class="employee-card"><strong>${e.name}</strong><br><span>${e.id}</span><br><span>${e.designation}</span><br><br><b>Net Salary: ${money(netSalary(e))}</b></div>`});document.getElementById("employeeList").innerHTML=html}
+
+function manageSalary(){document.getElementById("app").innerHTML=`
+<div class="content"><button class="back" onclick="hrDashboard()">← HR Dashboard</button><h2 class="page-title">Manage Employee Salary</h2>
+<div class="box"><label>Select Employee</label><select id="salaryEmployee" onchange="loadSalaryForm"><option value="">Select Employee</option>${employees.map(e=>`<option value="${e.id}">${e.id} - ${e.name}</option>`).join("")}</select><div id="salaryForm"></div></div></div>`;
+document.getElementById("salaryEmployee").onchange=loadSalaryForm}
+
+function loadSalaryForm(){let id=document.getElementById("salaryEmployee").value,e=employees.find(x=>x.id===id);if(!e){document.getElementById("salaryForm").innerHTML="";return}
+document.getElementById("salaryForm").innerHTML=`<div class="salary-form"><h3>${e.name}</h3><p class="small">${e.id} | ${e.designation}</p>
+<label>Basic Salary</label><input type="number" id="basicSalary" value="${e.basic}" oninput="calculateHRNet()">
+<label>Allowances</label><input type="number" id="allowance" value="${e.allowance}" oninput="calculateHRNet()">
+<label>Deductions</label><input type="number" id="deduction" value="${e.deduction}" oninput="calculateHRNet()">
+<div class="box">Net Salary: <strong id="hrNet" class="net">${money(netSalary(e))}</strong></div>
+<div class="success" id="successMsg">Salary updated successfully!</div><button onclick="saveSalary('${e.id}')">💾 Save Salary</button></div>`}
+
+function calculateHRNet(){let b=Number(document.getElementById("basicSalary").value)||0,a=Number(document.getElementById("allowance").value)||0,d=Number(document.getElementById("deduction").value)||0;document.getElementById("hrNet").innerText=money(b+a-d)}
+function saveSalary(id){let e=employees.find(x=>x.id===id);if(!e)return;e.basic=Number(document.getElementById("basicSalary").value)||0;e.allowance=Number(document.getElementById("allowance").value)||0;e.deduction=Number(document.getElementById("deduction").value)||0;saveEmployees();if(currentEmployee&&currentEmployee.id===id)currentEmployee=e;document.getElementById("successMsg").style.display="block";setTimeout(()=>document.getElementById("successMsg").style.display="none",2500)}
+function logout(){currentEmployee=null;currentRole=null;loginPage()}
+loginPage();
+</script>
+</body>
+</html>
